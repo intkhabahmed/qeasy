@@ -41,7 +41,7 @@ class AppTheme {
               fontSize: 14.0,
             ))
         .apply(
-          fontFamily: 'Poppins',
+          fontFamily: 'DmSans',
           displayColor: PrimaryTextColor,
           bodyColor: PrimaryTextColor,
         );

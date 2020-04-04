@@ -1,7 +1,10 @@
+import 'package:covidpass/screens/home.dart';
+import 'package:covidpass/screens/notifications.dart';
+import 'package:covidpass/screens/profile.dart';
+import 'package:covidpass/screens/qr_code.dart';
 import 'package:covidpass/utils/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:provider/provider.dart';
 
 class Dashboard extends StatefulWidget {
   final int initialIndex;
@@ -14,7 +17,12 @@ class Dashboard extends StatefulWidget {
 
 class _DashboardState extends State<Dashboard> {
   int _currentIndex;
-  final List<Widget> _children = [];
+  final List<Widget> _children = [
+    Home(),
+    QrCode(),
+    Notifications(),
+    Profile(),
+  ];
 
   @override
   void initState() {
@@ -30,24 +38,27 @@ class _DashboardState extends State<Dashboard> {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [],
-      child: WillPopScope(
-        onWillPop: () async {
-          if (_currentIndex != 0) {
-            onTabTapped(0);
-            return false;
-          }
-          return true;
-        },
-        child: DefaultTabController(
-          length: 3,
-          child: Scaffold(
-            body: _children[_currentIndex],
-            bottomNavigationBar: BottomNavigationBar(
-              selectedItemColor: PrimaryColor,
+    return WillPopScope(
+      onWillPop: () async {
+        if (_currentIndex != 0) {
+          onTabTapped(0);
+          return false;
+        }
+        return true;
+      },
+      child: DefaultTabController(
+        length: 3,
+        child: Scaffold(
+          body: _children[_currentIndex],
+          bottomNavigationBar: ClipRRect(
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
+            ),
+            child: BottomNavigationBar(
+              selectedItemColor: BottomNavItemColor,
               unselectedItemColor: BottomNavItemColor,
-              backgroundColor: Colors.white,
+              backgroundColor: PrimaryDarkColor,
               type: BottomNavigationBarType.fixed,
               onTap: onTabTapped,
               currentIndex: _currentIndex,
@@ -67,11 +78,34 @@ class _DashboardState extends State<Dashboard> {
 
   _buildNavigationItem(String title, String iconPath) {
     return BottomNavigationBarItem(
-      icon: SvgPicture.asset(iconPath),
-      activeIcon: SvgPicture.asset(
-        iconPath,
-        color: PrimaryColor,
-        height: 24,
+      icon: Column(
+        children: <Widget>[
+          Container(
+            width: 30,
+            height: 3,
+          ),
+          SizedBox(
+            height: 8.0,
+          ),
+          SvgPicture.asset(iconPath),
+        ],
+      ),
+      activeIcon: Column(
+        children: <Widget>[
+          Container(
+            width: 30,
+            height: 3,
+            color: Colors.white,
+          ),
+          SizedBox(
+            height: 8.0,
+          ),
+          SvgPicture.asset(
+            iconPath,
+            color: BottomNavItemColor,
+            height: 24,
+          ),
+        ],
       ),
       title: Text(
         title,

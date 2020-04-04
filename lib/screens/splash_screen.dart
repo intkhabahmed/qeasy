@@ -1,5 +1,7 @@
 import 'package:covidpass/screens/dashboard.dart';
+import 'package:covidpass/screens/login.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class SplashScreen extends StatefulWidget {
   @override
@@ -12,6 +14,7 @@ class _SplashScreenState extends State<SplashScreen>
   Animation _curvedAnimation;
   AnimationController _controller;
   double _angle = 0;
+  bool _isLoggedIn = true;
 
   @override
   void initState() {
@@ -39,11 +42,13 @@ class _SplashScreenState extends State<SplashScreen>
         });
       });
 
-    Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(
-          builder: (context) => Dashboard(),
-        ),
-        (route) => false);
+    Future.delayed(Duration(milliseconds: 1500), () {
+      Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (context) => _isLoggedIn ? Dashboard() : Login(),
+          ),
+          (route) => false);
+    });
   }
 
   @override
@@ -59,9 +64,9 @@ class _SplashScreenState extends State<SplashScreen>
         child: SizedBox(
           width: _angle,
           height: _angle,
-          child: Image.asset(
-            "assets/splash_logo.png",
-            semanticLabel: "toodle",
+          child: SvgPicture.asset(
+            "assets/vectors/splash_logo.svg",
+            semanticsLabel: "Covid Pass",
           ),
         ),
       ),
