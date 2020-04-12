@@ -5,7 +5,7 @@ class AppTheme {
   static ThemeData buildTheme() {
     final base = ThemeData.light();
     return base.copyWith(
-        primaryColor: PrimaryColor,
+        primaryColor: PrimaryDarkColor,
         primaryColorDark: PrimaryColor,
         accentColor: AccentColor,
         buttonTheme: base.buttonTheme.copyWith(

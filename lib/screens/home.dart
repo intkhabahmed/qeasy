@@ -1,10 +1,14 @@
 import 'package:covidpass/enums/store_category.dart';
-import 'package:covidpass/models/store_detail.dart';
+import 'package:covidpass/models/merchant.dart';
+import 'package:covidpass/provider/home_notifier.dart';
 import 'package:covidpass/screens/shop_detail_page.dart';
 import 'package:covidpass/utils/colors.dart';
+import 'package:covidpass/utils/constants.dart';
+import 'package:covidpass/utils/shared_pref.dart';
 import 'package:covidpass/widgets/shadow_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
 
 class Home extends StatefulWidget {
   @override
@@ -13,134 +17,120 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   StoreCategory _currentCategory = StoreCategory.ALL;
-  List<StoreDetail> stores = [
-    StoreDetail()
-      ..id = "1"
-      ..name = "24 Mantra Organic"
-      ..address = "Old Madras Road, Gopalan Grand Mall"
-      ..distance = "3.1"
-      ..imageUrl = "assets/dummy_store.png"
-      ..slots = ["8.00 AM - 9.00 AM", "10.00 AM - 11.00 AM"]
-      ..storeCategory = StoreCategory.GROCERIES,
-    StoreDetail()
-      ..id = "2"
-      ..name = "More Mega Store"
-      ..address = "Old Madras Road, Gopalan Grand Mall"
-      ..distance = "2"
-      ..imageUrl = "assets/dummy_store_1.png"
-      ..slots = ["8.00 AM - 9.00 AM", "10.00 AM - 11.00 AM"]
-      ..storeCategory = StoreCategory.GROCERIES,
-    StoreDetail()
-      ..id = "3"
-      ..name = "24x7 Medicals"
-      ..address = "Old Madras Road, Gopalan Grand Mall"
-      ..distance = "3.1"
-      ..imageUrl = "assets/dummy_store.png"
-      ..slots = ["8.00 AM - 9.00 AM", "10.00 AM - 11.00 AM"]
-      ..storeCategory = StoreCategory.MEDICINES,
-    StoreDetail()
-      ..id = "4"
-      ..name = "Bharat Medicals"
-      ..address = "Old Madras Road, Gopalan Grand Mall"
-      ..distance = "2"
-      ..imageUrl = "assets/dummy_store_1.png"
-      ..slots = ["8.00 AM - 9.00 AM", "10.00 AM - 11.00 AM"]
-      ..storeCategory = StoreCategory.MEDICINES,
-    StoreDetail()
-      ..id = "5"
-      ..name = "Licious Meats"
-      ..address = "Old Madras Road, Gopalan Grand Mall"
-      ..distance = "3.1"
-      ..imageUrl = "assets/dummy_store.png"
-      ..slots = ["8.00 AM - 9.00 AM", "10.00 AM - 11.00 AM"]
-      ..storeCategory = StoreCategory.MEAT,
-    StoreDetail()
-      ..id = "6"
-      ..name = "Khan Meats"
-      ..address = "Old Madras Road, Gopalan Grand Mall"
-      ..distance = "2"
-      ..imageUrl = "assets/dummy_store_1.png"
-      ..slots = ["8.00 AM - 9.00 AM", "10.00 AM - 11.00 AM"]
-      ..storeCategory = StoreCategory.MEAT,
-  ];
+
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Container(
-            margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              children: <Widget>[
-                SvgPicture.asset(
-                  "assets/vectors/location_pin.svg",
-                ),
-                SizedBox(
-                  width: 8.0,
-                ),
-                Expanded(
-                  child: Row(
-                    children: <Widget>[
-                      Text(
-                        "Domlur, Bangalore",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Icon(Icons.keyboard_arrow_down),
-                    ],
+    return Consumer<HomeNotifier>(
+      builder: (context, notifier, child) => SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Container(
+              margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                children: <Widget>[
+                  SvgPicture.asset(
+                    "assets/vectors/location_pin.svg",
                   ),
-                ),
-                SizedBox(
-                  width: 8.0,
-                ),
-                Icon(Icons.search),
-              ],
-            ),
-          ),
-          SizedBox(
-            height: 16.0,
-          ),
-          Container(
-            height: 56,
-            width: MediaQuery.of(context).size.width,
-            color: TabBackgroundColor,
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              children: <Widget>[
-                _buildTabItem(StoreCategory.ALL),
-                _buildTabItem(StoreCategory.GROCERIES),
-                _buildTabItem(StoreCategory.MEDICINES),
-                _buildTabItem(StoreCategory.MEAT),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text(
-              "Stores around you",
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
+                  SizedBox(
+                    width: 8.0,
+                  ),
+                  Expanded(
+                    child:
+                        /* FutureBuilder<List<Address>>(
+                      future: LocationUtils.getLocationFromCoordinates(
+                          SharedPrefUtils.get(Constants.LAT),
+                          SharedPrefUtils.get(Constants.LONG)),
+                      builder: (context, snapshot) =>
+                          snapshot.connectionState == ConnectionState.waiting
+                              ? Center(
+                                  child: CircularProgressIndicator(),
+                                )
+                              : snapshot.hasData && snapshot.data != null
+                                  ? Row(
+                                      children: <Widget>[
+                                        Text(
+                                          "${SharedPrefUtils.get(Constants.LAT)}, ${SharedPrefUtils.get(Constants.LONG)}",
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        Icon(Icons.keyboard_arrow_down),
+                                      ],
+                                    )
+                                  : Text("Location Service Disabled"),
+                    ) */
+                        Row(
+                      children: <Widget>[
+                        Text(
+                          "${SharedPrefUtils.get(Constants.LAT)}, ${SharedPrefUtils.get(Constants.LONG)}",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Icon(Icons.keyboard_arrow_down),
+                      ],
+                    ),
+                  ),
+                  SizedBox(
+                    width: 8.0,
+                  ),
+                  Icon(Icons.search),
+                ],
               ),
             ),
-          ),
-          Expanded(
-            child: ListView(
-              children: <Widget>[
-                ...stores
-                    .where((it) =>
-                        it.storeCategory == _currentCategory ||
-                        _currentCategory == StoreCategory.ALL)
-                    .map((store) => _buildStoreItem(store))
-                    .toList()
-              ],
+            SizedBox(
+              height: 16.0,
             ),
-          )
-        ],
+            Container(
+              height: 56,
+              width: MediaQuery.of(context).size.width,
+              color: TabBackgroundColor,
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                children: <Widget>[
+                  _buildTabItem(StoreCategory.ALL),
+                  _buildTabItem(StoreCategory.GROCERIES),
+                  _buildTabItem(StoreCategory.MEDICINES),
+                  _buildTabItem(StoreCategory.MEAT),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                "Stores around you",
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            Expanded(
+              child: notifier.isRequestFinished
+                  ? notifier.merchants != null
+                      ? ListView(
+                          children: <Widget>[
+                            ...notifier.merchants
+                                .where((it) =>
+                                    it.shopCategory == _currentCategory ||
+                                    _currentCategory == StoreCategory.ALL)
+                                .map((merchant) => _buildStoreItem(merchant))
+                                .toList()
+                          ],
+                        )
+                      : Center(
+                          child: Text("No nearby merchants available"),
+                        )
+                  : Center(
+                      child: CircularProgressIndicator(),
+                    ),
+            )
+          ],
+        ),
       ),
     );
   }
@@ -179,13 +169,13 @@ class _HomeState extends State<Home> {
     );
   }
 
-  Widget _buildStoreItem(StoreDetail storeDetail) {
+  Widget _buildStoreItem(Merchant merchant) {
     return InkWell(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => StoreDetailPage(storeDetail),
+            builder: (context) => StoreDetailPage(merchant),
           ),
         );
       },
@@ -198,9 +188,9 @@ class _HomeState extends State<Home> {
             child: Row(
               children: <Widget>[
                 Hero(
-                  tag: storeDetail.id,
+                  tag: merchant.merchantId,
                   child: Image.asset(
-                    storeDetail.imageUrl,
+                    "assets/dummy_store.png",
                     width: 82,
                     height: 82,
                   ),
@@ -211,7 +201,7 @@ class _HomeState extends State<Home> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Text(
-                        storeDetail.name,
+                        merchant.shopName,
                         style: TextStyle(
                           fontSize: 16.0,
                           fontWeight: FontWeight.w500,
@@ -226,25 +216,45 @@ class _HomeState extends State<Home> {
                           ),
                           SizedBox(width: 8.0),
                           Text(
-                            storeDetail.address,
+                            "${merchant.lat}, ${merchant.long}",
                             style: TextStyle(
                                 fontSize: 12.0,
                                 fontWeight: FontWeight.w500,
                                 color: SecondaryTextColor),
                           ),
-                          Text(" . "),
+                          /* Text(" . "),
                           Expanded(
                             child: Text(
-                              storeDetail.distance,
+                              merchant.maxPeoplePerSlot,
                               style: TextStyle(
                                   fontSize: 12.0,
                                   fontWeight: FontWeight.w500,
                                   color: SecondaryTextColor),
                             ),
-                          ),
+                          ), */
                         ],
                       ),
                       SizedBox(height: 8.0),
+                      Row(
+                        children: <Widget>[
+                          Text(
+                            "Slot Size",
+                            style: TextStyle(
+                                fontSize: 12.0,
+                                fontWeight: FontWeight.w500,
+                                color: SecondaryTextColor),
+                          ),
+                          SizedBox(width: 8.0),
+                          Text(
+                            merchant.maxPeoplePerSlot,
+                            style: TextStyle(
+                                fontSize: 12.0,
+                                fontWeight: FontWeight.w500,
+                                color: SecondaryTextColor),
+                          )
+                        ],
+                      ),
+                      /* SizedBox(height: 8.0),
                       Row(
                         children: <Widget>[
                           SvgPicture.asset(
@@ -261,13 +271,13 @@ class _HomeState extends State<Home> {
                             ),
                           )
                         ],
-                      ),
+                      ), */
                       SizedBox(height: 8.0),
-                      Row(
+                      /* Row(
                         children: <Widget>[
                           SizedBox(width: 20.0),
                           Text(
-                            storeDetail.slots[0],
+                            merchant.slots[0],
                             style: TextStyle(
                               fontSize: 12.0,
                               fontWeight: FontWeight.w500,
@@ -281,14 +291,14 @@ class _HomeState extends State<Home> {
                             ),
                           ),
                           Text(
-                            storeDetail.slots[1],
+                            merchant.slots[1],
                             style: TextStyle(
                               fontSize: 12.0,
                               fontWeight: FontWeight.w500,
                             ),
                           )
                         ],
-                      ),
+                      ), */
                     ],
                   ),
                 ),

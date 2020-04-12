@@ -1,5 +1,7 @@
 import 'package:covidpass/screens/dashboard.dart';
 import 'package:covidpass/screens/login.dart';
+import 'package:covidpass/utils/constants.dart';
+import 'package:covidpass/utils/shared_pref.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -14,7 +16,6 @@ class _SplashScreenState extends State<SplashScreen>
   Animation _curvedAnimation;
   AnimationController _controller;
   double _angle = 0;
-  bool _isLoggedIn = true;
 
   @override
   void initState() {
@@ -41,11 +42,12 @@ class _SplashScreenState extends State<SplashScreen>
           _angle = _animation.value;
         });
       });
-
     Future.delayed(Duration(milliseconds: 1500), () {
       Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(
-            builder: (context) => _isLoggedIn ? Dashboard() : Login(),
+            builder: (context) => SharedPrefUtils.get(Constants.USER_ID) != null
+                ? Dashboard()
+                : Login(),
           ),
           (route) => false);
     });

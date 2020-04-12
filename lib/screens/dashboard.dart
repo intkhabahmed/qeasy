@@ -1,10 +1,19 @@
+import 'package:covidpass/enums/user_role.dart';
+import 'package:covidpass/provider/home_notifier.dart';
+import 'package:covidpass/provider/slot_notifier.dart';
+import 'package:covidpass/screens/coupons.dart';
 import 'package:covidpass/screens/home.dart';
+import 'package:covidpass/screens/items.dart';
 import 'package:covidpass/screens/notifications.dart';
 import 'package:covidpass/screens/profile.dart';
 import 'package:covidpass/screens/qr_code.dart';
+import 'package:covidpass/screens/scan_qr.dart';
 import 'package:covidpass/utils/colors.dart';
+import 'package:covidpass/utils/constants.dart';
+import 'package:covidpass/utils/shared_pref.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
 
 class Dashboard extends StatefulWidget {
   final int initialIndex;
@@ -17,12 +26,20 @@ class Dashboard extends StatefulWidget {
 
 class _DashboardState extends State<Dashboard> {
   int _currentIndex;
-  final List<Widget> _children = [
-    Home(),
-    QrCode(),
-    Notifications(),
-    Profile(),
-  ];
+  final List<Widget> _children = SharedPrefUtils.get(Constants.USER_TYPE) ==
+          _getRoleFromEnum(UserRole.CUSTOMER)
+      ? [
+          Home(),
+          QrCode(),
+          Notifications(),
+          Profile(),
+        ]
+      : [
+          ScanQr(),
+          Items(),
+          Coupons(),
+          Profile(),
+        ];
 
   @override
   void initState() {
@@ -46,29 +63,56 @@ class _DashboardState extends State<Dashboard> {
         }
         return true;
       },
-      child: DefaultTabController(
-        length: 3,
-        child: Scaffold(
-          body: _children[_currentIndex],
-          bottomNavigationBar: ClipRRect(
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(24),
-              topRight: Radius.circular(24),
-            ),
-            child: BottomNavigationBar(
-              selectedItemColor: BottomNavItemColor,
-              unselectedItemColor: BottomNavItemColor,
-              backgroundColor: PrimaryDarkColor,
-              type: BottomNavigationBarType.fixed,
-              onTap: onTabTapped,
-              currentIndex: _currentIndex,
-              items: [
-                _buildNavigationItem("Home", "assets/vectors/home.svg"),
-                _buildNavigationItem("QR Code", "assets/vectors/qr_code.svg"),
-                _buildNavigationItem(
-                    "Notifications", "assets/vectors/notification.svg"),
-                _buildNavigationItem("Profile", "assets/vectors/profile.svg"),
-              ],
+      child: MultiProvider(
+        providers: [
+          ChangeNotifierProvider(
+            create: (context) => HomeNotifier(
+                SharedPrefUtils.get(Constants.LAT),
+                SharedPrefUtils.get(Constants.LONG)),
+          ),
+          ChangeNotifierProvider(
+            create: (context) =>
+                SlotNotifier(SharedPrefUtils.get(Constants.BOOKED_SLOT_ID)),
+          )
+        ],
+        child: DefaultTabController(
+          length: 3,
+          child: Scaffold(
+            body: _children[_currentIndex],
+            bottomNavigationBar: ClipRRect(
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(24),
+                topRight: Radius.circular(24),
+              ),
+              child: BottomNavigationBar(
+                selectedItemColor: BottomNavItemColor,
+                unselectedItemColor: BottomNavItemColor,
+                backgroundColor: PrimaryDarkColor,
+                type: BottomNavigationBarType.fixed,
+                onTap: onTabTapped,
+                currentIndex: _currentIndex,
+                items: SharedPrefUtils.get(Constants.USER_TYPE) ==
+                        _getRoleFromEnum(UserRole.CUSTOMER)
+                    ? [
+                        _buildNavigationItem("Home", "assets/vectors/home.svg"),
+                        _buildNavigationItem(
+                            "QR Code", "assets/vectors/qr_code.svg"),
+                        _buildNavigationItem(
+                            "Notifications", "assets/vectors/notification.svg"),
+                        _buildNavigationItem(
+                            "Profile", "assets/vectors/profile.svg"),
+                      ]
+                    : [
+                        _buildNavigationItem(
+                            "QR Code", "assets/vectors/qr_code.svg"),
+                        _buildNavigationItem(
+                            "Items", "assets/vectors/ic_bullet_list.svg"),
+                        _buildNavigationItem(
+                            "Coupons", "assets/vectors/ic_coupon.svg"),
+                        _buildNavigationItem(
+                            "Profile", "assets/vectors/profile.svg"),
+                      ],
+              ),
             ),
           ),
         ),
@@ -112,5 +156,18 @@ class _DashboardState extends State<Dashboard> {
         style: TextStyle(fontWeight: FontWeight.w600),
       ),
     );
+  }
+
+  static String _getRoleFromEnum(UserRole currentUserRole) {
+    switch (currentUserRole) {
+      case UserRole.CUSTOMER:
+        return "normalUser";
+      case UserRole.MERCHANT:
+        return "merchant";
+      case UserRole.POLICE:
+        return "police";
+      default:
+        return null;
+    }
   }
 }

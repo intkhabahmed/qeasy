@@ -1,8 +1,16 @@
+import 'package:covidpass/repository/data_repository.dart';
+import 'package:covidpass/screens/dashboard.dart';
 import 'package:covidpass/screens/signup.dart';
+import 'package:covidpass/utils/code_snippets.dart';
 import 'package:covidpass/utils/colors.dart';
+import 'package:covidpass/utils/constants.dart';
+import 'package:covidpass/utils/form_validation.dart';
 import 'package:covidpass/utils/keyboard_utils.dart';
+import 'package:covidpass/utils/shared_pref.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class Login extends StatefulWidget {
   @override
@@ -12,6 +20,9 @@ class Login extends StatefulWidget {
 class _LoginState extends State<Login> {
   TapGestureRecognizer _registerRecognizer = TapGestureRecognizer();
   TextEditingController _mobileController = TextEditingController();
+  TextEditingController _passwordController = TextEditingController();
+  GlobalKey<FormState> _formKey = GlobalKey();
+  GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey();
 
   @override
   void initState() {
@@ -26,6 +37,7 @@ class _LoginState extends State<Login> {
   @override
   void dispose() {
     _mobileController.dispose();
+    _passwordController.dispose();
     _registerRecognizer.dispose();
     super.dispose();
   }
@@ -35,6 +47,7 @@ class _LoginState extends State<Login> {
     return GestureDetector(
       onTap: () => KeyboardUtils.hideKeyboard(context),
       child: Scaffold(
+        key: _scaffoldKey,
         backgroundColor: PrimaryDarkColor,
         body: Column(
           children: <Widget>[
@@ -42,9 +55,25 @@ class _LoginState extends State<Login> {
               child: Container(
                 child: ListView(
                   children: <Widget>[
-                    Image.asset(
-                      "assets/ic_login.png",
-                      height: 360,
+                    SizedBox(
+                      height: 32,
+                    ),
+                    SvgPicture.asset(
+                      "assets/vectors/ic_logo.svg",
+                    ),
+                    SizedBox(
+                      height: 32,
+                    ),
+                    Text(
+                      "Welcome back to QEasy",
+                      style: TextStyle(
+                        fontSize: 24,
+                        color: Colors.white,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(
+                      height: 32,
                     ),
                     Text(
                       "Sign in to continue",
@@ -58,7 +87,7 @@ class _LoginState extends State<Login> {
                   ],
                 ),
               ),
-              flex: 4,
+              flex: 2,
             ),
             Flexible(
               child: Container(
@@ -72,13 +101,36 @@ class _LoginState extends State<Login> {
                 ),
                 child: ListView(
                   children: <Widget>[
-                    TextFormField(
-                      decoration: InputDecoration(
-                          border: OutlineInputBorder(),
-                          labelText: "Phone Number"),
-                    ),
-                    SizedBox(
-                      height: 32,
+                    Form(
+                      key: _formKey,
+                      child: Column(
+                        children: <Widget>[
+                          TextFormField(
+                            controller: _mobileController,
+                            decoration: InputDecoration(
+                              border: OutlineInputBorder(),
+                              labelText: "Phone Number",
+                            ),
+                            validator: (value) =>
+                                FormValidation.validatePhone(value),
+                          ),
+                          SizedBox(
+                            height: 32,
+                          ),
+                          TextFormField(
+                            controller: _passwordController,
+                            decoration: InputDecoration(
+                              border: OutlineInputBorder(),
+                              labelText: "Password",
+                            ),
+                            validator: (value) =>
+                                FormValidation.validatePassword(value),
+                          ),
+                          SizedBox(
+                            height: 32,
+                          ),
+                        ],
+                      ),
                     ),
                     Container(
                       width: MediaQuery.of(context).size.width,
@@ -87,14 +139,15 @@ class _LoginState extends State<Login> {
                         borderRadius: BorderRadius.all(Radius.circular(6)),
                       ),
                       child: FlatButton(
-                          child: Text(
-                            "SIGN IN",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                            ),
+                        child: Text(
+                          "SIGN IN",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
                           ),
-                          onPressed: () {}),
+                        ),
+                        onPressed: () => login(),
+                      ),
                     ),
                     SizedBox(
                       height: 32,
@@ -132,5 +185,33 @@ class _LoginState extends State<Login> {
         ),
       ),
     );
+  }
+
+  void _showSnackBar(String message) {
+    _scaffoldKey.currentState.showSnackBar(CodeSnippets.makeSnackBar(message));
+  }
+
+  login() {
+    if (!_formKey.currentState.validate()) {
+      return;
+    }
+    DataRepository.instance
+        .login(_mobileController.text, _passwordController.text)
+        .then((response) {
+      if (response.responseCode == "200") {
+        SharedPrefUtils.setInt(Constants.USER_ID, response.data["user_id"]);
+        SharedPrefUtils.setString(Constants.USER_TYPE, response.data["role"]);
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => Dashboard()),
+          (route) => false,
+        );
+      } else {
+        _showSnackBar("Login Failed");
+      }
+      print(response.toJson());
+    }).catchError((DioError error) {
+      _showSnackBar("Login Failed: ${error.response.statusCode}");
+    });
   }
 }
