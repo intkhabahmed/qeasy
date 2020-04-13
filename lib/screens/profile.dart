@@ -4,6 +4,7 @@ import 'package:covidpass/screens/login.dart';
 import 'package:covidpass/utils/colors.dart';
 import 'package:covidpass/utils/constants.dart';
 import 'package:covidpass/utils/shared_pref.dart';
+import 'package:covidpass/utils/user_role_serializer.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -30,7 +31,10 @@ class _ProfileState extends State<Profile> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
                         Text(
-                          notifier.user.userType == UserRole.MERCHANT
+                          UserRoleSerializer.getEnumFromRole(
+                                      SharedPrefUtils.get(
+                                          Constants.USER_TYPE)) ==
+                                  UserRole.MERCHANT
                               ? notifier.user.shopName
                               : "${notifier.user.firstName} ${notifier.user.lastName}",
                           style: TextStyle(

@@ -1,9 +1,6 @@
-import 'package:covidpass/enums/user_role.dart';
 import 'package:covidpass/models/api_response.dart';
 import 'package:covidpass/models/booked_slot.dart';
 import 'package:covidpass/repository/data_repository.dart';
-import 'package:covidpass/utils/constants.dart';
-import 'package:covidpass/utils/shared_pref.dart';
 import 'package:flutter/foundation.dart';
 
 class SlotNotifier with ChangeNotifier {
@@ -25,11 +22,8 @@ class SlotNotifier with ChangeNotifier {
     try {
       _isRequestFinished = false;
       notifyListeners();
-      ApiResponse response = await DataRepository.instance.getSlotInformation(
-        slotId,
-        isForMerchant:
-            SharedPrefUtils.get(Constants.USER_TYPE) == UserRole.MERCHANT,
-      );
+      ApiResponse response =
+          await DataRepository.instance.getSlotInformation(slotId);
       _bookedSlot = BookedSlot.fromJson(response.data);
       _isRequestFinished = true;
       notifyListeners();

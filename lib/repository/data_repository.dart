@@ -94,7 +94,7 @@ class DataRepository {
   }
 
   Future<ApiResponse> getSlotInformation(int slotId,
-      {bool isForMerchant = true}) {
+      {bool isForMerchant = false}) {
     if (isForMerchant) {
       return ApiService(_getDio()).getSlotInformation(
         {

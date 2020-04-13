@@ -356,9 +356,10 @@ class _StoreDetailPageState extends State<StoreDetailPage>
                       ],
                     ),
                     Container(
-                      child: notifier.giftItems != null
+                      child: notifier.giftItems != null &&
+                              notifier.giftItems.length > 0
                           ? ListView.builder(
-                              itemCount: 1,
+                              itemCount: notifier.giftItems.length,
                               itemBuilder: (context, position) =>
                                   _buildCouponItem(
                                       notifier.giftItems[position]),
@@ -404,6 +405,7 @@ class _StoreDetailPageState extends State<StoreDetailPage>
           fontSize: 16,
           fontWeight: FontWeight.bold,
         ),
+        textAlign: TextAlign.center,
       ),
     );
   }
