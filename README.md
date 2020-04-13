@@ -1,4 +1,4 @@
-# covidpass
+# QEasy
 
 A new Flutter application.
 
