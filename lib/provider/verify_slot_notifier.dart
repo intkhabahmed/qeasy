@@ -27,8 +27,7 @@ class VerifySlotNotifier with ChangeNotifier {
       notifyListeners();
       ApiResponse response = await DataRepository.instance.getSlotInformation(
         slotId,
-        isForMerchant:
-            SharedPrefUtils.get(Constants.USER_TYPE) == UserRole.MERCHANT,
+        isForMerchant: SharedPrefUtils.get(Constants.USER_TYPE) == "merchant",
       );
       _bookedSlot = BookedSlot.fromJson(response.data);
       _isRequestFinished = true;
