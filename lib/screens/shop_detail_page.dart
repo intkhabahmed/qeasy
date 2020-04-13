@@ -1,6 +1,9 @@
+import 'dart:math';
+
+import 'package:covidpass/models/gift_item.dart';
 import 'package:covidpass/models/merchant.dart';
-import 'package:covidpass/models/slot.dart';
 import 'package:covidpass/models/slot_book_request.dart';
+import 'package:covidpass/models/slot_info.dart';
 import 'package:covidpass/provider/merchant_detail_notifier.dart';
 import 'package:covidpass/repository/data_repository.dart';
 import 'package:covidpass/screens/slot_booking_success.dart';
@@ -8,6 +11,7 @@ import 'package:covidpass/utils/code_snippets.dart';
 import 'package:covidpass/utils/colors.dart';
 import 'package:covidpass/utils/constants.dart';
 import 'package:covidpass/utils/date_utils.dart';
+import 'package:covidpass/utils/merchant_utils.dart';
 import 'package:covidpass/utils/shared_pref.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -22,16 +26,41 @@ class StoreDetailPage extends StatefulWidget {
   _StoreDetailPageState createState() => _StoreDetailPageState();
 }
 
-class _StoreDetailPageState extends State<StoreDetailPage> {
-  Slot _selectedSlot;
+class _StoreDetailPageState extends State<StoreDetailPage>
+    with SingleTickerProviderStateMixin {
+  SlotInfo _selectedSlot;
   GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey();
   bool _isSubmitted = false;
+  int _currentTab = 0;
+  TabController _controller;
+  List<String> couponBgs = [
+    "assets/coupon_item_1.png",
+    "assets/coupon_item_2.png",
+    "assets/coupon_item_3.png"
+  ];
+  bool buyingFinished = true;
+  int _slotViewFlexCount = 1;
+
+  @override
+  void initState() {
+    _controller = TabController(length: 2, vsync: this)
+      ..addListener(() {
+        setState(() {
+          _currentTab = _controller.index;
+        });
+      });
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider<MerchantDetailNotifier>(
       create: (context) => MerchantDetailNotifier(
-          widget.merchant.merchantId, SharedPrefUtils.get(Constants.USER_ID)),
+        widget.merchant.merchantId,
+        SharedPrefUtils.get(Constants.USER_ID),
+        double.parse(widget.merchant.lat),
+        double.parse(widget.merchant.lng),
+      ),
       child: Consumer<MerchantDetailNotifier>(
         builder: (context, notifier, child) => Scaffold(
           key: _scaffoldKey,
@@ -45,6 +74,7 @@ class _StoreDetailPageState extends State<StoreDetailPage> {
             ],
           ),
           body: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(
                 height: 16,
@@ -55,8 +85,9 @@ class _StoreDetailPageState extends State<StoreDetailPage> {
                   children: <Widget>[
                     Hero(
                       tag: widget.merchant.merchantId,
-                      child: Image.asset(
-                        "assets/dummy_store.png",
+                      child: SvgPicture.asset(
+                        MerchantUtils.getImageForMerchant(
+                            widget.merchant.shopCategory),
                         width: 82,
                         height: 82,
                       ),
@@ -81,21 +112,16 @@ class _StoreDetailPageState extends State<StoreDetailPage> {
                                 height: 14,
                               ),
                               SizedBox(width: 8.0),
-                              Text(
-                                "${widget.merchant.lat}, ${widget.merchant.long}",
-                                style: TextStyle(
-                                    fontSize: 12.0,
-                                    fontWeight: FontWeight.w500,
-                                    color: SecondaryTextColor),
-                              ),
-                              Text(" . "),
                               Expanded(
                                 child: Text(
-                                  "3.1 km",
+                                  notifier.currentAddress != null
+                                      ? notifier.currentAddress.addressLine
+                                      : "Location Disabled",
                                   style: TextStyle(
                                       fontSize: 12.0,
                                       fontWeight: FontWeight.w500,
                                       color: SecondaryTextColor),
+                                  maxLines: 1,
                                 ),
                               ),
                             ],
@@ -122,251 +148,228 @@ class _StoreDetailPageState extends State<StoreDetailPage> {
               SizedBox(
                 height: 16,
               ),
-              Container(
-                margin: EdgeInsets.symmetric(horizontal: 16),
-                padding: EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                    border: Border.all(color: ItemTableBorderColor)),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    Text("Available Items", style: TextStyle(fontSize: 14)),
-                    Row(
-                      children: <Widget>[
-                        Icon(
-                          Icons.phone,
-                          size: 14,
-                          color: PrimaryDarkColor,
-                        ),
-                        SizedBox(
-                          width: 8,
-                        ),
-                        Text(
-                          "CALL US TO ENQUIRE",
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: PrimaryDarkColor,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        )
-                      ],
-                    )
-                  ],
-                ),
-              ),
-              Container(
-                margin: EdgeInsets.symmetric(horizontal: 16),
-                padding: EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                    border: Border(
-                  left: BorderSide(color: ItemTableBorderColor),
-                  right: BorderSide(color: ItemTableBorderColor),
-                  bottom: BorderSide(color: ItemTableBorderColor),
-                )),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    Column(
-                      children: <Widget>[
-                        ...[0, 1, 2, 3, 4, 5, 6, 7, 8]
-                            .map((it) => Padding(
-                                  padding: const EdgeInsets.all(4.0),
-                                  child: Row(
-                                    children: <Widget>[
-                                      Text(
-                                        "${String.fromCharCode(0x2022)} ",
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: SecondaryLightTextColor,
-                                        ),
-                                      ),
-                                      Text(
-                                        "Raw Banana",
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: SecondaryLightTextColor,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ))
-                            .toList()
-                      ],
-                    ),
-                    Column(
-                      children: <Widget>[
-                        ...[0, 1, 2, 3, 4, 5, 6, 7, 8]
-                            .map((it) => Padding(
-                                  padding: const EdgeInsets.all(4.0),
-                                  child: Row(
-                                    children: <Widget>[
-                                      Text(
-                                        "${String.fromCharCode(0x2022)} ",
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: SecondaryLightTextColor,
-                                        ),
-                                      ),
-                                      Text(
-                                        "Sunflower Oil",
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: SecondaryLightTextColor,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ))
-                            .toList()
-                      ],
-                    ),
-                    Column(
-                      children: <Widget>[
-                        ...[0, 1, 2, 3, 4, 5, 6, 7, 8]
-                            .map(
-                              (it) => Padding(
-                                padding: const EdgeInsets.all(4.0),
-                                child: Row(
-                                  children: <Widget>[
-                                    Text(
-                                      "${String.fromCharCode(0x2022)} ",
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: SecondaryLightTextColor,
-                                      ),
-                                    ),
-                                    Text(
-                                      "Wheat Flour",
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: SecondaryLightTextColor,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            )
-                            .toList()
-                      ],
-                    ),
-                  ],
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Text(
+                  "Allocation: ${widget.merchant.maxPeoplePerSlot} Customers at a time",
+                  style: TextStyle(
+                    color: SecondaryLightTextColor,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
               SizedBox(
                 height: 16,
               ),
+              Container(
+                height: 56,
+                width: MediaQuery.of(context).size.width,
+                color: TabBackgroundColor,
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: TabBar(
+                  indicatorColor: Colors.transparent,
+                  controller: _controller,
+                  tabs: <Widget>[
+                    _buildTabItem(0),
+                    _buildTabItem(1),
+                  ],
+                ),
+              ),
               Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: TabBackgroundColor,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(24),
-                      topRight: Radius.circular(24),
-                    ),
-                  ),
-                  child: Column(
-                    children: <Widget>[
-                      SizedBox(
-                        height: 16,
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: <Widget>[
-                          Text(
-                            "Select Time Slot",
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
+                child: TabBarView(
+                  controller: _controller,
+                  children: [
+                    Column(
+                      children: <Widget>[
+                        Expanded(
+                          child: Container(
+                            margin: EdgeInsets.symmetric(horizontal: 16),
+                            padding: EdgeInsets.all(8),
+                            child: widget.merchant.items.length > 0
+                                ? GridView.count(
+                                    crossAxisCount: 3,
+                                    shrinkWrap: true,
+                                    childAspectRatio: 3.0,
+                                    children: <Widget>[
+                                      ...widget.merchant.items.map(
+                                        (it) => Row(
+                                          children: <Widget>[
+                                            Text(
+                                              "${String.fromCharCode(0x2022)} ",
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                color: SecondaryLightTextColor,
+                                              ),
+                                            ),
+                                            Text(
+                                              it.itemValue,
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                color: SecondaryLightTextColor,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                : Center(
+                                    child:
+                                        Text("No Item information available"),
+                                  ),
+                          ),
+                        ),
+                        SizedBox(
+                          height: 16,
+                        ),
+                        Expanded(
+                          flex: _slotViewFlexCount,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: CouponsBgColor,
+                              borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(24),
+                                topRight: Radius.circular(24),
+                              ),
                             ),
-                          ),
-                          Row(
-                            children: <Widget>[
-                              Text(
-                                "${DateUtils.getFormattedDateInWords(DateTime.now())}",
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
+                            child: Column(
+                              children: <Widget>[
+                                SizedBox(
+                                  height: 16,
                                 ),
-                              ),
-                              Icon(
-                                Icons.keyboard_arrow_down,
-                                size: 14,
-                              )
-                            ],
-                          ),
-                        ],
-                      ),
-                      SizedBox(
-                        height: 16,
-                      ),
-                      Expanded(
-                        child: Container(
-                          padding: EdgeInsets.all(16),
-                          child: notifier.isRequestFinished
-                              ? notifier.availableSlots != null
-                                  ? GridView.count(
-                                      childAspectRatio: 3.5,
-                                      crossAxisCount: 2,
-                                      shrinkWrap: true,
+                                InkWell(
+                                  onTap: () {
+                                    if (_slotViewFlexCount == 1) {
+                                      setState(() {
+                                        _slotViewFlexCount = 2;
+                                      });
+                                    } else {
+                                      setState(() {
+                                        _slotViewFlexCount = 1;
+                                      });
+                                    }
+                                  },
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceEvenly,
+                                    children: <Widget>[
+                                      Text(
+                                        "Select Time Slot",
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      Row(
+                                        children: <Widget>[
+                                          Text(
+                                            "${DateUtils.getFormattedDateInWords(DateTime.now())}",
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          Icon(
+                                            Icons.keyboard_arrow_down,
+                                            size: 14,
+                                          )
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                SizedBox(
+                                  height: 16,
+                                ),
+                                Expanded(
+                                  child: Container(
+                                    padding: EdgeInsets.all(16),
+                                    child: notifier.isRequestFinished
+                                        ? notifier.availableSlots != null
+                                            ? GridView.count(
+                                                childAspectRatio: 3.5,
+                                                crossAxisCount: 2,
+                                                shrinkWrap: true,
+                                                children: <Widget>[
+                                                  ...notifier.availableSlots
+                                                      .map((slot) =>
+                                                          _buildSlotItem(
+                                                              notifier, slot)),
+                                                ],
+                                              )
+                                            : Center(
+                                                child:
+                                                    Text("No available Slots"),
+                                              )
+                                        : Center(
+                                            child: CircularProgressIndicator(),
+                                          ),
+                                  ),
+                                ),
+                                Container(
+                                  padding: EdgeInsets.symmetric(
+                                      vertical: 21, horizontal: 54),
+                                  width: MediaQuery.of(context).size.width,
+                                  decoration: BoxDecoration(
+                                    color: PrimaryDarkColor,
+                                    borderRadius: BorderRadius.only(
+                                      topLeft: Radius.circular(24),
+                                      topRight: Radius.circular(24),
+                                    ),
+                                  ),
+                                  child: InkWell(
+                                    onTap: () => _bookSlot(),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: <Widget>[
-                                        ...notifier.availableSlots.map((slot) =>
-                                            _buildSlotItem(notifier, slot)),
+                                        Text(
+                                          "BOOK SLOT",
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                        Visibility(
+                                          visible: _isSubmitted,
+                                          child: Container(
+                                            margin: EdgeInsets.only(left: 8),
+                                            child: SizedBox(
+                                              width: 24,
+                                              height: 24,
+                                              child: CircularProgressIndicator(
+                                                backgroundColor: Colors.white,
+                                              ),
+                                            ),
+                                          ),
+                                        )
                                       ],
-                                    )
-                                  : Center(
-                                      child: Text("No available Slots"),
-                                    )
-                              : Center(
-                                  child: CircularProgressIndicator(),
-                                ),
-                        ),
-                      ),
-                      Container(
-                        padding:
-                            EdgeInsets.symmetric(vertical: 21, horizontal: 54),
-                        width: MediaQuery.of(context).size.width,
-                        decoration: BoxDecoration(
-                          color: PrimaryDarkColor,
-                          borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(24),
-                            topRight: Radius.circular(24),
-                          ),
-                        ),
-                        child: InkWell(
-                          onTap: () => _bookSlot(),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: <Widget>[
-                              Text(
-                                "BOOK SLOT",
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                              Visibility(
-                                visible: _isSubmitted,
-                                child: Container(
-                                  margin: EdgeInsets.only(left: 8),
-                                  child: SizedBox(
-                                    width: 24,
-                                    height: 24,
-                                    child: CircularProgressIndicator(
-                                      backgroundColor: Colors.white,
                                     ),
                                   ),
                                 ),
-                              )
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                      ),
-                    ],
-                  ),
+                        )
+                      ],
+                    ),
+                    Container(
+                      child: notifier.giftItems != null
+                          ? ListView.builder(
+                              itemCount: 1,
+                              itemBuilder: (context, position) =>
+                                  _buildCouponItem(
+                                      notifier.giftItems[position]),
+                            )
+                          : Center(
+                              child: Text("No Gift Card available"),
+                            ),
+                    )
+                  ],
                 ),
-              )
+              ),
             ],
           ),
         ),
@@ -378,11 +381,39 @@ class _StoreDetailPageState extends State<StoreDetailPage> {
     _scaffoldKey.currentState.showSnackBar(CodeSnippets.makeSnackBar(message));
   }
 
-  Widget _buildSlotItem(MerchantDetailNotifier notifier, Slot slot) {
+  Widget _buildTabItem(int position) {
+    return Container(
+      decoration: _currentTab == position
+          ? BoxDecoration(
+              borderRadius: BorderRadius.circular(5),
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: CardShadowColor,
+                  blurRadius: 1.5,
+                  spreadRadius: 0.5,
+                ),
+              ],
+            )
+          : null,
+      margin: EdgeInsets.only(right: 16),
+      padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      child: Text(
+        position == 0 ? "AVAILABLE ITEMS" : "GIFT CARDS",
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSlotItem(MerchantDetailNotifier notifier, SlotInfo slot) {
     return InkWell(
       onTap: () {
         setState(() {
           _selectedSlot = slot;
+          print(slot.toJson());
         });
       },
       child: Container(
@@ -390,13 +421,12 @@ class _StoreDetailPageState extends State<StoreDetailPage> {
         height: 56,
         padding: EdgeInsets.all(8),
         decoration: BoxDecoration(
-            color: _selectedSlot == slot ? PrimaryColor : null,
-            borderRadius: BorderRadius.all(Radius.circular(6)),
-            border: _selectedSlot == slot
-                ? null
-                : Border.all(color: ItemTableBorderColor)),
+          color: _selectedSlot == slot ? PrimaryColor : null,
+          borderRadius: BorderRadius.all(Radius.circular(6)),
+          border: _selectedSlot == slot ? null : Border.all(),
+        ),
         child: Text(
-          "${slot.starttime}:00 - ${slot.endtime}:00",
+          "${slot.startTime}:00 - ${slot.endTime}:00",
           style: TextStyle(
             color: _selectedSlot == slot ? Colors.white : PrimaryTextColor,
           ),
@@ -411,11 +441,13 @@ class _StoreDetailPageState extends State<StoreDetailPage> {
       _showSnackBar("Select a slot");
       return;
     }
-    _isSubmitted = true;
+    setState(() {
+      _isSubmitted = true;
+    });
     DataRepository.instance
         .bookSlot((SlotBookRequest()
-              ..startTime = _selectedSlot.starttime
-              ..endTime = _selectedSlot.endtime
+              ..startTime = _selectedSlot.startTime
+              ..endTime = _selectedSlot.endTime
               ..bookingDate = _selectedSlot.date
               ..merchantId = widget.merchant.merchantId
               ..userId = SharedPrefUtils.get(Constants.USER_ID))
@@ -423,13 +455,17 @@ class _StoreDetailPageState extends State<StoreDetailPage> {
         .then((response) {
       if (response.responseCode == "200" && response.hasError == "false") {
         SharedPrefUtils.setInt(
-            Constants.BOOKED_SLOT_ID, response.data["slot_id"]);
+            Constants.BOOKED_SLOT_ID, response.data["slotId"]);
         Navigator.push(
           context,
           MaterialPageRoute(
               builder: (context) =>
-                  SlotBookingSuccess(response.data["slot_id"])),
+                  SlotBookingSuccess(response.data["slotId"])),
         );
+      } else {
+        setState(() {
+          _isSubmitted = false;
+        });
       }
     }).catchError((e) {
       setState(() {
@@ -437,5 +473,170 @@ class _StoreDetailPageState extends State<StoreDetailPage> {
       });
       print(e.message);
     });
+  }
+
+  _buildCouponItem(GiftItem giftItem) {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Stack(
+        alignment: Alignment.center,
+        children: <Widget>[
+          Image.asset(getRandonCouponBg()),
+          Container(
+            padding: EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  giftItem.giftName,
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(
+                  height: 8,
+                ),
+                Row(
+                  children: <Widget>[
+                    SvgPicture.asset(
+                      "assets/vectors/ic_stopwatch.svg",
+                      color: Colors.white,
+                      height: 16,
+                    ),
+                    SizedBox(
+                      width: 8,
+                    ),
+                    Text(
+                      "Valid till 12th june",
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(
+                  height: 16,
+                ),
+                Row(
+                  children: <Widget>[
+                    Text(
+                      "VIEW DETAILS",
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.white.withOpacity(0.5),
+                        fontWeight: FontWeight.w500,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                    SizedBox(
+                      width: 16,
+                    ),
+                    InkWell(
+                      onTap: () => _buyCoupon(giftItem.giftId),
+                      child: Text(
+                        "BUY NOW",
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 8,
+                    ),
+                    Visibility(
+                      visible: !buyingFinished,
+                      child: SizedBox(
+                        height: 16,
+                        width: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              ],
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
+  String getRandonCouponBg() {
+    return couponBgs[Random().nextInt(couponBgs.length - 1)];
+  }
+
+  _buyCoupon(int giftId) async {
+    setState(() {
+      buyingFinished = false;
+    });
+
+    DataRepository.instance.buyGift({
+      "userId": SharedPrefUtils.get(Constants.USER_ID),
+      "giftId": giftId
+    }).then((response) {
+      if (response.responseCode == "200" && response.hasError == "false") {
+        setState(() {
+          buyingFinished = true;
+        });
+        _showDialog(true);
+      }
+    }).catchError((e) {
+      setState(() {
+        buyingFinished = false;
+      });
+      print(e.message);
+    });
+  }
+
+  _showDialog(bool isSuccess) {
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          content: Container(
+            height: 200,
+            width: 200,
+            child: isSuccess
+                ? Column(
+                    children: <Widget>[
+                      SvgPicture.asset("assets/vectors/ic_correct.svg"),
+                      SizedBox(
+                        height: 16,
+                      ),
+                      Text(
+                        "Gift Card purchased successfully",
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  )
+                : Column(
+                    children: <Widget>[
+                      Icon(
+                        Icons.clear,
+                        size: 48,
+                        color: ErrorColor,
+                      ),
+                      SizedBox(
+                        height: 16,
+                      ),
+                      Text(
+                        "Gift Card purchased failed",
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+          ),
+        ),
+      ),
+    );
   }
 }

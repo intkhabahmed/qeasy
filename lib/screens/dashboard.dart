@@ -1,5 +1,6 @@
 import 'package:covidpass/enums/user_role.dart';
 import 'package:covidpass/provider/home_notifier.dart';
+import 'package:covidpass/provider/profile_notifier.dart';
 import 'package:covidpass/provider/slot_notifier.dart';
 import 'package:covidpass/screens/coupons.dart';
 import 'package:covidpass/screens/home.dart';
@@ -11,6 +12,7 @@ import 'package:covidpass/screens/scan_qr.dart';
 import 'package:covidpass/utils/colors.dart';
 import 'package:covidpass/utils/constants.dart';
 import 'package:covidpass/utils/shared_pref.dart';
+import 'package:covidpass/utils/user_role_serializer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
@@ -27,19 +29,25 @@ class Dashboard extends StatefulWidget {
 class _DashboardState extends State<Dashboard> {
   int _currentIndex;
   final List<Widget> _children = SharedPrefUtils.get(Constants.USER_TYPE) ==
-          _getRoleFromEnum(UserRole.CUSTOMER)
+          UserRoleSerializer.getRoleFromEnum(UserRole.CUSTOMER)
       ? [
           Home(),
           QrCode(),
           Notifications(),
           Profile(),
         ]
-      : [
-          ScanQr(),
-          Items(),
-          Coupons(),
-          Profile(),
-        ];
+      : SharedPrefUtils.get(Constants.USER_TYPE) ==
+              UserRoleSerializer.getRoleFromEnum(UserRole.MERCHANT)
+          ? [
+              ScanQr(),
+              Items(),
+              Coupons(),
+              Profile(),
+            ]
+          : [
+              ScanQr(),
+              Profile(),
+            ];
 
   @override
   void initState() {
@@ -71,48 +79,60 @@ class _DashboardState extends State<Dashboard> {
                 SharedPrefUtils.get(Constants.LONG)),
           ),
           ChangeNotifierProvider(
-            create: (context) =>
-                SlotNotifier(SharedPrefUtils.get(Constants.BOOKED_SLOT_ID)),
+            create: (context) => SlotNotifier(
+                SharedPrefUtils.get(Constants.USER_ID),
+                isFromSuccess: false),
+          ),
+          ChangeNotifierProvider(
+            create: (context) => ProfileNotifier(
+              SharedPrefUtils.get(Constants.USER_ID),
+              SharedPrefUtils.get(Constants.USER_TYPE),
+            ),
           )
         ],
-        child: DefaultTabController(
-          length: 3,
-          child: Scaffold(
-            body: _children[_currentIndex],
-            bottomNavigationBar: ClipRRect(
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(24),
-                topRight: Radius.circular(24),
-              ),
-              child: BottomNavigationBar(
-                selectedItemColor: BottomNavItemColor,
-                unselectedItemColor: BottomNavItemColor,
-                backgroundColor: PrimaryDarkColor,
-                type: BottomNavigationBarType.fixed,
-                onTap: onTabTapped,
-                currentIndex: _currentIndex,
-                items: SharedPrefUtils.get(Constants.USER_TYPE) ==
-                        _getRoleFromEnum(UserRole.CUSTOMER)
-                    ? [
-                        _buildNavigationItem("Home", "assets/vectors/home.svg"),
-                        _buildNavigationItem(
-                            "QR Code", "assets/vectors/qr_code.svg"),
-                        _buildNavigationItem(
-                            "Notifications", "assets/vectors/notification.svg"),
-                        _buildNavigationItem(
-                            "Profile", "assets/vectors/profile.svg"),
-                      ]
-                    : [
-                        _buildNavigationItem(
-                            "QR Code", "assets/vectors/qr_code.svg"),
-                        _buildNavigationItem(
-                            "Items", "assets/vectors/ic_bullet_list.svg"),
-                        _buildNavigationItem(
-                            "Coupons", "assets/vectors/ic_coupon.svg"),
-                        _buildNavigationItem(
-                            "Profile", "assets/vectors/profile.svg"),
-                      ],
-              ),
+        child: Scaffold(
+          body: _children[_currentIndex],
+          bottomNavigationBar: ClipRRect(
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
+            ),
+            child: BottomNavigationBar(
+              selectedItemColor: BottomNavItemColor,
+              unselectedItemColor: BottomNavItemColor,
+              backgroundColor: PrimaryDarkColor,
+              type: BottomNavigationBarType.fixed,
+              onTap: onTabTapped,
+              currentIndex: _currentIndex,
+              items: SharedPrefUtils.get(Constants.USER_TYPE) ==
+                      UserRoleSerializer.getRoleFromEnum(UserRole.CUSTOMER)
+                  ? [
+                      _buildNavigationItem("Home", "assets/vectors/home.svg"),
+                      _buildNavigationItem(
+                          "QR Code", "assets/vectors/qr_code.svg"),
+                      _buildNavigationItem(
+                          "Notifications", "assets/vectors/notification.svg"),
+                      _buildNavigationItem(
+                          "Profile", "assets/vectors/profile.svg"),
+                    ]
+                  : SharedPrefUtils.get(Constants.USER_TYPE) ==
+                          UserRoleSerializer.getRoleFromEnum(UserRole.MERCHANT)
+                      ? [
+                          _buildNavigationItem(
+                              "QR Code", "assets/vectors/qr_code.svg"),
+                          _buildNavigationItem(
+                              "Items", "assets/vectors/ic_bullet_list.svg"),
+                          _buildNavigationItem(
+                              "Coupons", "assets/vectors/ic_coupon.svg"),
+                          _buildNavigationItem(
+                              "Profile", "assets/vectors/profile.svg"),
+                        ]
+                      : [
+                          _buildNavigationItem(
+                              "QR Code", "assets/vectors/qr_code.svg"),
+                          _buildNavigationItem(
+                              "Profile", "assets/vectors/profile.svg"),
+                        ],
             ),
           ),
         ),
@@ -156,18 +176,5 @@ class _DashboardState extends State<Dashboard> {
         style: TextStyle(fontWeight: FontWeight.w600),
       ),
     );
-  }
-
-  static String _getRoleFromEnum(UserRole currentUserRole) {
-    switch (currentUserRole) {
-      case UserRole.CUSTOMER:
-        return "normalUser";
-      case UserRole.MERCHANT:
-        return "merchant";
-      case UserRole.POLICE:
-        return "police";
-      default:
-        return null;
-    }
   }
 }

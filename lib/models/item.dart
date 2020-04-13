@@ -5,7 +5,6 @@ part 'item.g.dart';
 @JsonSerializable()
 class Item {
   int id;
-  @JsonKey(name: "item_value")
   String itemValue;
 
   Item();

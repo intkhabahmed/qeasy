@@ -1,5 +1,5 @@
 import 'package:covidpass/models/merchant.dart';
-import 'package:covidpass/models/slot_info.dart';
+import 'package:covidpass/models/slot.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'booked_slot.g.dart';
@@ -7,8 +7,7 @@ part 'booked_slot.g.dart';
 @JsonSerializable()
 class BookedSlot {
   Merchant merchantInfo;
-  @JsonKey(name: "slot_info")
-  SlotInfo slotInfo;
+  Slot slotInfo;
 
   BookedSlot();
 

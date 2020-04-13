@@ -12,7 +12,7 @@ class Merchant {
   String avgTime;
   String maxPeoplePerSlot;
   String lat;
-  String long;
+  String lng;
   List<Item> items;
 
   Merchant();

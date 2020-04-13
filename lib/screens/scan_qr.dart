@@ -1,5 +1,4 @@
 import 'package:covidpass/screens/validate_qr.dart';
-import 'package:covidpass/utils/code_snippets.dart';
 import 'package:flutter/material.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 
@@ -30,10 +29,6 @@ class _ScanQrState extends State<ScanQr> {
         onQRViewCreated: _onQRViewCreated,
       ),
     );
-  }
-
-  void _showSnackBar(String message) {
-    _scaffoldKey.currentState.showSnackBar(CodeSnippets.makeSnackBar(message));
   }
 
   void _onQRViewCreated(QRViewController controller) {

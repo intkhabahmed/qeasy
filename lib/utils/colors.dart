@@ -22,6 +22,8 @@ const CardShadowColor = const Color(0xFFC4C4C4);
 const CardTextColor = const Color(0xFFACAEB1);
 const TabBackgroundColor = const Color(0xFFF3F3F3);
 const ItemTableBorderColor = const Color(0xFFE3E3E3);
+const CouponsBgColor = const Color(0xFFFDBC1A);
+const GiftItemColor = const Color(0xFFF2F2F2);
 
 const ErrorColor = const Color(0xFFF24A4A);
 const SuccessColor = const Color(0xFF3AD4A6);

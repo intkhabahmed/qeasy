@@ -7,27 +7,28 @@ part 'user.g.dart';
 @JsonSerializable()
 class User {
   @JsonKey(includeIfNull: false)
-  String userId;
+  int userId;
   UserRole userType;
-  @JsonKey(name: "phone_number")
   String phoneNumber;
   @JsonKey(includeIfNull: false)
   String firstName;
   @JsonKey(includeIfNull: false)
   String lastName;
-  @JsonKey(name: "electricity_bill_number", includeIfNull: false)
+  @JsonKey(includeIfNull: false)
   String electricityBillNumber;
   String lat;
-  String long;
+  String lng;
   String password;
-  @JsonKey(name: "shop_name", includeIfNull: false)
+  @JsonKey(includeIfNull: false)
   String shopName;
-  @JsonKey(name: "shop_category", includeIfNull: false)
+  @JsonKey(includeIfNull: false)
   StoreCategory shopCategory;
-  @JsonKey(name: "gst_number", includeIfNull: false)
+  @JsonKey(includeIfNull: false)
   String gstNumber;
-  @JsonKey(name: "max_slots", includeIfNull: false)
+  @JsonKey(includeIfNull: false)
   String maxSlots;
+  @JsonKey(includeIfNull: false)
+  List<int> activeSlots;
 
   User();
 

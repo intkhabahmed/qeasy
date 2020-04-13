@@ -11,6 +11,7 @@ import 'package:covidpass/utils/form_validation.dart';
 import 'package:covidpass/utils/keyboard_utils.dart';
 import 'package:covidpass/utils/location_utils.dart';
 import 'package:covidpass/utils/shared_pref.dart';
+import 'package:covidpass/utils/user_role_serializer.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -46,13 +47,6 @@ class _SignUpState extends State<SignUp> {
             builder: (context) => Login(),
           ),
         );
-    Future.delayed(Duration(seconds: 2), () {
-      _firstNameController.text = "Intkhab";
-      _lastNameController.text = "Ahmed";
-      _passwordController.text = "pass123";
-      _mobileController.text = "8839906817";
-      _billController.text = "12425235";
-    });
     super.initState();
   }
 
@@ -481,7 +475,7 @@ class _SignUpState extends State<SignUp> {
           ..phoneNumber = _mobileController.text
           ..electricityBillNumber = _billController.text
           ..lat = locationData.latitude.toString()
-          ..long = locationData.longitude.toString();
+          ..lng = locationData.longitude.toString();
         break;
       case UserRole.MERCHANT:
         user
@@ -492,7 +486,7 @@ class _SignUpState extends State<SignUp> {
           ..phoneNumber = _mobileController.text
           ..maxSlots = _allotedCustomersController.text
           ..lat = locationData.latitude.toString()
-          ..long = locationData.longitude.toString();
+          ..lng = locationData.longitude.toString();
         break;
       case UserRole.POLICE:
         user
@@ -506,17 +500,9 @@ class _SignUpState extends State<SignUp> {
 
     DataRepository.instance.register(user).then((res) {
       if (res.responseCode == "200" && res.hasError == "false") {
-        if (_currentUserRole == UserRole.CUSTOMER) {
-          SharedPrefUtils.setInt(
-              Constants.USER_ID, res.data["userInfo"]["user_id"]);
-          SharedPrefUtils.setString(
-              Constants.USER_TYPE, _getRoleFromEnum(_currentUserRole));
-        } else {
-          SharedPrefUtils.setInt(
-              Constants.USER_ID, res.data["merchantInfo"]["merchant_id"]);
-          SharedPrefUtils.setString(
-              Constants.USER_TYPE, _getRoleFromEnum(UserRole.MERCHANT));
-        }
+        SharedPrefUtils.setInt(Constants.USER_ID, res.data["userId"]);
+        SharedPrefUtils.setString(Constants.USER_TYPE,
+            UserRoleSerializer.getRoleFromEnum(_currentUserRole));
         SharedPrefUtils.setDouble(Constants.LAT, locationData.latitude);
         SharedPrefUtils.setDouble(Constants.LONG, locationData.longitude);
         Navigator.pushAndRemoveUntil(
@@ -536,18 +522,5 @@ class _SignUpState extends State<SignUp> {
       });
       _showSnackBar(e.message);
     });
-  }
-
-  String _getRoleFromEnum(UserRole currentUserRole) {
-    switch (currentUserRole) {
-      case UserRole.CUSTOMER:
-        return "normalUser";
-      case UserRole.MERCHANT:
-        return "merchant";
-      case UserRole.POLICE:
-        return "police";
-      default:
-        return null;
-    }
   }
 }

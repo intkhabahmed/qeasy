@@ -1,3 +1,5 @@
+import 'package:geocoder/geocoder.dart';
+import 'package:geocoder/model.dart';
 import 'package:location/location.dart';
 
 class LocationUtils {
@@ -28,9 +30,9 @@ class LocationUtils {
     return _locationData;
   }
 
-  /* static Future<List<Address>> getLocationFromCoordinates(
+  static Future<List<Address>> getLocationFromCoordinates(
       double lat, double long) async {
     Coordinates coordinates = Coordinates(lat, long);
     return await Geocoder.local.findAddressesFromCoordinates(coordinates);
-  } */
+  }
 }

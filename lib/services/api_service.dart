@@ -29,4 +29,39 @@ abstract class ApiService {
 
   @POST("/getSlotInformation")
   Future<ApiResponse> getSlotInformation(@Body() Map<String, dynamic> body);
+
+  @POST("/getNextActiveSlotDetails")
+  Future<ApiResponse> getNextActiveSlotDetails(
+      @Body() Map<String, dynamic> body);
+
+  //Gifts apis
+
+  @POST("/newGift")
+  Future<ApiResponse> addGift(@Body() Map<String, dynamic> body);
+
+  @POST("/deleteGift")
+  Future<ApiResponse> deleteGift(@Body() Map<String, dynamic> body);
+
+  @POST("/updateGift")
+  Future<ApiResponse> updateGift(@Body() Map<String, dynamic> body);
+
+  @POST("/getAllGifts")
+  Future<ApiResponse> getAllGifts(@Body() Map<String, dynamic> body);
+
+  @POST("/buyGift")
+  Future<ApiResponse> buyGift(@Body() Map<String, dynamic> body);
+
+  // Items apis
+
+  @POST("/newItem")
+  Future<ApiResponse> addItem(@Body() Map<String, dynamic> body);
+
+  @POST("/deleteItem")
+  Future<ApiResponse> deleteItem(@Body() Map<String, dynamic> body);
+
+  @POST("/updateItem")
+  Future<ApiResponse> updateItem(@Body() Map<String, dynamic> body);
+
+  @POST("/getItemAll")
+  Future<ApiResponse> getAllItems(@Body() Map<String, dynamic> body);
 }

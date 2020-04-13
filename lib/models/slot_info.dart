@@ -4,12 +4,9 @@ part 'slot_info.g.dart';
 
 @JsonSerializable()
 class SlotInfo {
-  @JsonKey(name: "start_time")
+  String date;
   int startTime;
-  @JsonKey(name: "end_time")
   int endTime;
-  @JsonKey(name: "booking_date")
-  String bookingDate;
 
   SlotInfo();
 

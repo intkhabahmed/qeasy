@@ -1,13 +1,18 @@
 import 'package:covidpass/enums/store_category.dart';
 import 'package:covidpass/models/merchant.dart';
 import 'package:covidpass/provider/home_notifier.dart';
+import 'package:covidpass/screens/coupon_page.dart';
 import 'package:covidpass/screens/shop_detail_page.dart';
 import 'package:covidpass/utils/colors.dart';
 import 'package:covidpass/utils/constants.dart';
+import 'package:covidpass/utils/location_utils.dart';
+import 'package:covidpass/utils/merchant_utils.dart';
 import 'package:covidpass/utils/shared_pref.dart';
 import 'package:covidpass/widgets/shadow_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:geocoder/model.dart';
+import 'package:location/location.dart';
 import 'package:provider/provider.dart';
 
 class Home extends StatefulWidget {
@@ -17,6 +22,7 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   StoreCategory _currentCategory = StoreCategory.ALL;
+  bool _locationLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -36,43 +42,98 @@ class _HomeState extends State<Home> {
                     width: 8.0,
                   ),
                   Expanded(
-                    child:
-                        /* FutureBuilder<List<Address>>(
-                      future: LocationUtils.getLocationFromCoordinates(
-                          SharedPrefUtils.get(Constants.LAT),
-                          SharedPrefUtils.get(Constants.LONG)),
-                      builder: (context, snapshot) =>
-                          snapshot.connectionState == ConnectionState.waiting
-                              ? Center(
-                                  child: CircularProgressIndicator(),
-                                )
-                              : snapshot.hasData && snapshot.data != null
-                                  ? Row(
-                                      children: <Widget>[
-                                        Text(
-                                          "${SharedPrefUtils.get(Constants.LAT)}, ${SharedPrefUtils.get(Constants.LONG)}",
+                    child: notifier.isRequestFinished
+                        ? InkWell(
+                            child: notifier.currentAddress != null
+                                ? Row(
+                                    children: <Widget>[
+                                      Expanded(
+                                        child: Text(
+                                          "${notifier.currentAddress.addressLine}",
                                           style: TextStyle(
                                             fontSize: 16,
                                             fontWeight: FontWeight.bold,
                                           ),
+                                          overflow: TextOverflow.ellipsis,
                                         ),
-                                        Icon(Icons.keyboard_arrow_down),
-                                      ],
-                                    )
-                                  : Text("Location Service Disabled"),
-                    ) */
-                        Row(
-                      children: <Widget>[
-                        Text(
-                          "${SharedPrefUtils.get(Constants.LAT)}, ${SharedPrefUtils.get(Constants.LONG)}",
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Icon(Icons.keyboard_arrow_down),
-                      ],
-                    ),
+                                      ),
+                                      Icon(Icons.keyboard_arrow_down),
+                                    ],
+                                  )
+                                : Text("Location Service Disabled"),
+                            onTap: () {
+                              showDialog(
+                                  context: context,
+                                  builder: (context) => StatefulBuilder(
+                                        builder: (context, setState) =>
+                                            AlertDialog(
+                                          title: Text(
+                                            "Fetch the current location",
+                                            textAlign: TextAlign.center,
+                                          ),
+                                          content: Container(
+                                            decoration: BoxDecoration(
+                                                color: Colors.white,
+                                                borderRadius:
+                                                    BorderRadius.circular(4)),
+                                            height: 200,
+                                            width: 200,
+                                            child: Column(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: <Widget>[
+                                                Icon(Icons.location_searching),
+                                                SizedBox(
+                                                  height: 16,
+                                                ),
+                                                Visibility(
+                                                    visible: _locationLoading,
+                                                    child:
+                                                        CircularProgressIndicator()),
+                                                SizedBox(
+                                                  height: 16,
+                                                ),
+                                                RaisedButton(
+                                                  onPressed: () async {
+                                                    setState(() {
+                                                      _locationLoading = true;
+                                                    });
+                                                    LocationData locationData =
+                                                        await LocationUtils
+                                                            .getCurrentLocation();
+
+                                                    notifier
+                                                        .getLocationByLatLong(
+                                                            locationData
+                                                                .latitude,
+                                                            locationData
+                                                                .longitude);
+                                                    SharedPrefUtils.setDouble(
+                                                        Constants.LAT,
+                                                        locationData.latitude);
+                                                    SharedPrefUtils.setDouble(
+                                                        Constants.LONG,
+                                                        locationData.longitude);
+                                                    setState(() {
+                                                      _locationLoading = false;
+                                                    });
+                                                    Navigator.pop(context);
+                                                  },
+                                                  child: Text(
+                                                    "Get Current Location",
+                                                    style: TextStyle(
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                )
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ));
+                            },
+                          )
+                        : LinearProgressIndicator(),
                   ),
                   SizedBox(
                     width: 8.0,
@@ -128,7 +189,81 @@ class _HomeState extends State<Home> {
                   : Center(
                       child: CircularProgressIndicator(),
                     ),
-            )
+            ),
+            Container(
+              width: MediaQuery.of(context).size.width,
+              padding: EdgeInsets.only(left: 16),
+              decoration: BoxDecoration(
+                color: CouponsBgColor,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
+                ),
+              ),
+              child: Row(
+                children: <Widget>[
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        "Exciting Coupons",
+                        style: TextStyle(
+                          fontSize: 14,
+                        ),
+                      ),
+                      SizedBox(
+                        height: 8,
+                      ),
+                      Text(
+                        "Save your Local businesses\nby buying service coupons",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(
+                        height: 8,
+                      ),
+                      InkWell(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => CouponPage(),
+                            ),
+                          );
+                        },
+                        child: Row(
+                          children: <Widget>[
+                            Text(
+                              "KNOW MORE",
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: ErrorColor,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            SizedBox(
+                              width: 8,
+                            ),
+                            Icon(
+                              Icons.arrow_forward,
+                              color: ErrorColor,
+                              size: 16,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  Expanded(
+                      child: Image.asset(
+                    "assets/coupon_logo.png",
+                    height: 150,
+                  )),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -189,8 +324,8 @@ class _HomeState extends State<Home> {
               children: <Widget>[
                 Hero(
                   tag: merchant.merchantId,
-                  child: Image.asset(
-                    "assets/dummy_store.png",
+                  child: SvgPicture.asset(
+                    MerchantUtils.getImageForMerchant(merchant.shopCategory),
                     width: 82,
                     height: 82,
                   ),
@@ -215,28 +350,52 @@ class _HomeState extends State<Home> {
                             height: 14,
                           ),
                           SizedBox(width: 8.0),
-                          Text(
-                            "${merchant.lat}, ${merchant.long}",
-                            style: TextStyle(
-                                fontSize: 12.0,
-                                fontWeight: FontWeight.w500,
-                                color: SecondaryTextColor),
-                          ),
-                          /* Text(" . "),
                           Expanded(
-                            child: Text(
-                              merchant.maxPeoplePerSlot,
-                              style: TextStyle(
-                                  fontSize: 12.0,
-                                  fontWeight: FontWeight.w500,
-                                  color: SecondaryTextColor),
+                            child: FutureBuilder<List<Address>>(
+                              future: LocationUtils.getLocationFromCoordinates(
+                                  double.parse(merchant.lat),
+                                  double.parse(merchant.lng)),
+                              builder: (context, snapshot) => snapshot
+                                          .connectionState ==
+                                      ConnectionState.waiting
+                                  ? Center(
+                                      child: LinearProgressIndicator(),
+                                    )
+                                  : snapshot.hasData && snapshot.data != null
+                                      ? Row(
+                                          children: <Widget>[
+                                            Expanded(
+                                              child: Text(
+                                                "${snapshot.data.first.addressLine}",
+                                                style: TextStyle(
+                                                    fontSize: 12.0,
+                                                    fontWeight: FontWeight.w500,
+                                                    color: SecondaryTextColor),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        )
+                                      : Text(
+                                          "${merchant.lat}, ${merchant.lng}",
+                                          style: TextStyle(
+                                              fontSize: 12.0,
+                                              fontWeight: FontWeight.w500,
+                                              color: SecondaryTextColor),
+                                        ),
                             ),
-                          ), */
+                          ),
                         ],
                       ),
                       SizedBox(height: 8.0),
                       Row(
                         children: <Widget>[
+                          Icon(
+                            Icons.group,
+                            size: 14,
+                            color: SecondaryLightTextColor,
+                          ),
+                          SizedBox(width: 8.0),
                           Text(
                             "Slot Size",
                             style: TextStyle(

@@ -8,7 +8,7 @@ class DateUtils {
 
   static DateTime getDateTimeFromString(String dateString,
       {String separator = "/"}) {
-    if (dateString.isNotEmpty) {
+    if (dateString?.isNotEmpty ?? false) {
       List<int> dateParts = dateString
           .split(separator)
           .map(

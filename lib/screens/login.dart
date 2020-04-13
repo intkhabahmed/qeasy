@@ -6,11 +6,12 @@ import 'package:covidpass/utils/colors.dart';
 import 'package:covidpass/utils/constants.dart';
 import 'package:covidpass/utils/form_validation.dart';
 import 'package:covidpass/utils/keyboard_utils.dart';
+import 'package:covidpass/utils/location_utils.dart';
 import 'package:covidpass/utils/shared_pref.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:location/location.dart';
 
 class Login extends StatefulWidget {
   @override
@@ -55,14 +56,9 @@ class _LoginState extends State<Login> {
               child: Container(
                 child: ListView(
                   children: <Widget>[
+                    Image.asset("assets/clip_waiting.png"),
                     SizedBox(
-                      height: 32,
-                    ),
-                    SvgPicture.asset(
-                      "assets/vectors/ic_logo.svg",
-                    ),
-                    SizedBox(
-                      height: 32,
+                      height: 16,
                     ),
                     Text(
                       "Welcome back to QEasy",
@@ -73,7 +69,7 @@ class _LoginState extends State<Login> {
                       textAlign: TextAlign.center,
                     ),
                     SizedBox(
-                      height: 32,
+                      height: 16,
                     ),
                     Text(
                       "Sign in to continue",
@@ -87,7 +83,7 @@ class _LoginState extends State<Login> {
                   ],
                 ),
               ),
-              flex: 2,
+              flex: 3,
             ),
             Flexible(
               child: Container(
@@ -99,84 +95,80 @@ class _LoginState extends State<Login> {
                     topRight: Radius.circular(24),
                   ),
                 ),
-                child: ListView(
-                  children: <Widget>[
-                    Form(
-                      key: _formKey,
-                      child: Column(
-                        children: <Widget>[
-                          TextFormField(
-                            controller: _mobileController,
-                            decoration: InputDecoration(
-                              border: OutlineInputBorder(),
-                              labelText: "Phone Number",
-                            ),
-                            validator: (value) =>
-                                FormValidation.validatePhone(value),
-                          ),
-                          SizedBox(
-                            height: 32,
-                          ),
-                          TextFormField(
-                            controller: _passwordController,
-                            decoration: InputDecoration(
-                              border: OutlineInputBorder(),
-                              labelText: "Password",
-                            ),
-                            validator: (value) =>
-                                FormValidation.validatePassword(value),
-                          ),
-                          SizedBox(
-                            height: 32,
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      width: MediaQuery.of(context).size.width,
-                      decoration: BoxDecoration(
-                        color: PrimaryColor,
-                        borderRadius: BorderRadius.all(Radius.circular(6)),
-                      ),
-                      child: FlatButton(
-                        child: Text(
-                          "SIGN IN",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                          ),
+                child: Form(
+                  key: _formKey,
+                  child: ListView(
+                    children: <Widget>[
+                      TextFormField(
+                        controller: _mobileController,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(),
+                          labelText: "Phone Number",
                         ),
-                        onPressed: () => login(),
+                        validator: (value) =>
+                            FormValidation.validatePhone(value),
                       ),
-                    ),
-                    SizedBox(
-                      height: 32,
-                    ),
-                    RichText(
-                      textAlign: TextAlign.center,
-                      text: TextSpan(
-                        children: [
-                          TextSpan(
-                            text: "New User? ",
+                      SizedBox(
+                        height: 16,
+                      ),
+                      TextFormField(
+                        controller: _passwordController,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(),
+                          labelText: "Password",
+                        ),
+                        validator: (value) =>
+                            FormValidation.validatePassword(value),
+                      ),
+                      SizedBox(
+                        height: 32,
+                      ),
+                      Container(
+                        width: MediaQuery.of(context).size.width,
+                        decoration: BoxDecoration(
+                          color: PrimaryColor,
+                          borderRadius: BorderRadius.all(Radius.circular(6)),
+                        ),
+                        child: FlatButton(
+                          child: Text(
+                            "SIGN IN",
                             style: TextStyle(
-                              color: PrimaryTextColor,
+                              color: Colors.white,
                               fontSize: 16,
-                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                          TextSpan(
-                            recognizer: _registerRecognizer,
-                            text: "REGISTER",
-                            style: TextStyle(
-                              color: PrimaryColor,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
+                          onPressed: () => login(),
+                        ),
                       ),
-                    ),
-                  ],
+                      SizedBox(
+                        height: 16,
+                      ),
+                      RichText(
+                        textAlign: TextAlign.center,
+                        text: TextSpan(
+                          children: [
+                            TextSpan(
+                              text: "New User? ",
+                              style: TextStyle(
+                                color: PrimaryTextColor,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            TextSpan(
+                              recognizer: _registerRecognizer,
+                              text: "REGISTER",
+                              style: TextStyle(
+                                color: PrimaryColor,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               flex: 2,
@@ -191,15 +183,23 @@ class _LoginState extends State<Login> {
     _scaffoldKey.currentState.showSnackBar(CodeSnippets.makeSnackBar(message));
   }
 
-  login() {
+  login() async {
     if (!_formKey.currentState.validate()) {
       return;
+    }
+    if (SharedPrefUtils.get(Constants.LAT) == null &&
+        SharedPrefUtils.get(Constants.LONG) == null) {
+      LocationData locationData = await LocationUtils.getCurrentLocation();
+      if (locationData == null) {
+        _showSnackBar("Location is needed to serve you better");
+        return;
+      }
     }
     DataRepository.instance
         .login(_mobileController.text, _passwordController.text)
         .then((response) {
       if (response.responseCode == "200") {
-        SharedPrefUtils.setInt(Constants.USER_ID, response.data["user_id"]);
+        SharedPrefUtils.setInt(Constants.USER_ID, response.data["userId"]);
         SharedPrefUtils.setString(Constants.USER_TYPE, response.data["role"]);
         Navigator.pushAndRemoveUntil(
           context,
